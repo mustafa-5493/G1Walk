@@ -113,7 +113,7 @@ G1Walk/
 
 Every core component was implemented without RL libraries:
 - PPO algorithm (clipped surrogate, GAE, separate optimizers)
-- Transformer policy (input projection, positional embeddings, encoder-decoder)
+- Transformer policy (input projection, positional embeddings, encoder)
 - Running mean/std normalizer
 - Vectorized environment wrapper
 - Custom G1 MuJoCo environment (observation space, reward, curriculum)
