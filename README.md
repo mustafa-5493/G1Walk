@@ -1,6 +1,10 @@
 # G1Walk
 
-A from-scratch implementation of PPO with a Transformer policy, trained on a custom MuJoCo environment for Unitree G1 humanoid locomotion using a 3-phase curriculum.
+A from-
+
+https://github.com/user-attachments/assets/5d4e8333-5807-4569-8153-2baec54bad33
+
+scratch implementation of PPO with a Transformer policy, trained on a custom MuJoCo environment for Unitree G1 humanoid locomotion using a 3-phase curriculum.
 
 ## Demo
 
