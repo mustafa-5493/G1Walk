@@ -122,7 +122,7 @@ MuJoCo, PyTorch, and Gymnasium are used as infrastructure tools only.
 
 ## Limitations & Future Work
 
-- Gait smoothness limited by current reward formulation — foot impact penalty is a natural next step
+- Gait smoothness limited by current reward formulation. Next step is foot impact penalty.
 - No push recovery (phase 3)
 - No rough terrain
 - Sim-to-real transfer not yet attempted
