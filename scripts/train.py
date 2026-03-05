@@ -15,8 +15,8 @@ from policy.transformer_policy import TransformerPolicy
 XML_PATH    = '/workspace/unitree_mujoco/unitree_robots/g1/scene_23dof_pos.xml'
 OBS_DIM     = 102
 ACT_DIM     = 29
-HISTORY_LEN = 8       # Walter's design
-N_ENVS      = 32      # Walter's design
+HISTORY_LEN = 8       
+N_ENVS      = 32      
 N_STEPS     = 2048
 BATCH_SIZE  = 512
 N_EPOCHS    = 2
@@ -27,10 +27,10 @@ CRITIC_LR   = 1e-3
 MAX_GRAD    = 0.5
 GAMMA       = 0.99
 GAE_LAMBDA  = 0.95
-TOTAL_STEPS = 100_000_000   # Walter's design
+TOTAL_STEPS = 100_000_000   
 DEVICE      = 'cuda'
 
-# curriculum thresholds — master each phase (Walter's design)
+# curriculum thresholds — master each phase 
 PHASE_THRESHOLDS = {
     PHASE_STAND: 400,
     PHASE_SLOW:  600,
@@ -147,7 +147,7 @@ print('-' * 72)
 
 while total_steps < TOTAL_STEPS:
 
-    # linear lr decay (Walter's design)
+    # linear lr decay 
     frac = max(1.0 - total_steps / TOTAL_STEPS, 1e-2)
     for pg in actor_opt.param_groups:  pg['lr'] = ACTOR_LR  * frac
     for pg in critic_opt.param_groups: pg['lr'] = CRITIC_LR * frac
