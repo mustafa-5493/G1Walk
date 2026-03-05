@@ -42,11 +42,14 @@ https://github.com/user-attachments/assets/5d4e8333-5807-4569-8153-2baec54bad33
 | Upright bonus | 3.0 | Quaternion w² × height |
 | Alternating foot contact | 2.0 | Encourage natural gait timing |
 | Foot air time | 0.5 | Reward proper swing phase |
+| Survival | 0.5 | Per-step survival bonus |
 | Energy penalty | -0.0005 | Penalize torque² |
 | Jerkiness penalty | -0.05 | Penalize action delta² |
 | Torso wobble penalty | -0.1 | Penalize angular velocity² |
+| Arm flailing penalty | -0.0001 | Penalize arm joint velocity² |
 | Foot slip penalty | -0.3 | Penalize horizontal velocity during contact |
 | Foot separation reward | 1.0 | Prevent narrow/crossing stance |
+
 
 ## Curriculum (3 phases)
 
