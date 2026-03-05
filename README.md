@@ -1,7 +1,6 @@
 # G1Walk
 
-A from-scratch implementation of PPO with a Transformer policy, trained on a custom MuJoCo environment for Unitree G1 humanoid locomotion using a 3-<img width="1800" height="750" alt="training_curve" src="https://github.com/user-attachments/assets/82826940-3d8f-48cb-8ff2-b0a69fee3617" />
-phase curriculum.
+A from-scratch implementation of PPO with a Transformer policy, trained on a custom MuJoCo environment for Unitree G1 humanoid locomotion using a 3-phase curriculum.
 
 https://github.com/user-attachments/assets/5d4e8333-5807-4569-8153-2baec54bad33
 
@@ -16,6 +15,10 @@ https://github.com/user-attachments/assets/5d4e8333-5807-4569-8153-2baec54bad33
 | Episode length | 1000 steps (never falls) |
 | Training steps | 39M |
 | Training time | ~18 hours on T4 GPU |
+
+## Training Curve
+<img width="1800" height="750" alt="training_curve" src="https://github.com/user-attachments/assets/f131f4fe-ebe0-40c2-95a7-5f56e1803228" />
+
 
 **Policy:** Transformer Encoder
 - 256 embed dim, 3 layers, 4 attention heads
