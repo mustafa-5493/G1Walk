@@ -1,14 +1,8 @@
 # G1Walk
 
-A from-
+A from-scratch implementation of PPO with a Transformer policy, trained on a custom MuJoCo environment for Unitree G1 humanoid locomotion using a 3-phase curriculum.
 
 https://github.com/user-attachments/assets/5d4e8333-5807-4569-8153-2baec54bad33
-
-scratch implementation of PPO with a Transformer policy, trained on a custom MuJoCo environment for Unitree G1 humanoid locomotion using a 3-phase curriculum.
-
-## Demo
-
-![G1Walk Demo](g1_demo.mp4)
 
 *Unitree G1 tracking variable velocity commands after 39M training steps.*
 
@@ -21,8 +15,6 @@ scratch implementation of PPO with a Transformer policy, trained on a custom MuJ
 | Episode length | 1000 steps (never falls) |
 | Training steps | 39M |
 | Training time | ~18 hours on T4 GPU |
-
-## Architecture
 
 **Policy:** Encoder-Decoder Transformer
 - Asymmetric design: encoder 256 dim / 4 layers, decoder 128 dim / 2 layers
