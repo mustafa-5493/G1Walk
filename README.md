@@ -101,7 +101,7 @@ G1Walk/
 ├── env/
 │   └── g1_env.py          # Custom MuJoCo environment
 ├── policy/
-│   └── transformer_policy.py  # Encoder-Decoder Transformer
+│   └── transformer_policy.py  # Encoder Transformer
 ├── scripts/
 │   ├── train.py           # PPO training loop
 │   └── evaluate.py        # Evaluation + video recording
