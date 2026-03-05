@@ -16,8 +16,8 @@ https://github.com/user-attachments/assets/5d4e8333-5807-4569-8153-2baec54bad33
 | Training steps | 39M |
 | Training time | ~18 hours on T4 GPU |
 
-**Policy:** Encoder-Decoder Transformer
-- Asymmetric design: encoder 256 dim / 4 layers, decoder 128 dim / 2 layers
+**Policy:** Transformer Encoder
+- 256 embed dim, 3 layers, 4 attention heads
 - 8-frame observation history
 - Separate actor and critic heads
 - Orthogonal weight initialization
