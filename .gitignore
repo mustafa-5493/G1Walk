@@ -1,0 +1,6 @@
+checkpoints/
+*.pt
+*.mp4
+__pycache__/
+*.pyc
+.DS_Store
