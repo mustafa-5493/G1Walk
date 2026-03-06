@@ -21,7 +21,7 @@ https://github.com/user-attachments/assets/5d4e8333-5807-4569-8153-2baec54bad33
 
 https://github.com/user-attachments/assets/0e0f3b59-43dd-4990-88b8-b0b7445695ad
 
-HERE]
+
 
 *Known limitation in v2: diagonal drift artifact from wide lateral velocity training range. To be fixed in v3.*
 
