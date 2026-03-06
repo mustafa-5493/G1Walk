@@ -85,12 +85,22 @@ class VecG1Env:
         for e in self.envs: e.close()
 
 # ── Main ──────────────────────────────────────────────────────
-print(f'G1Walk | PPO + Transformer | {N_ENVS} envs | '
-      f'{TOTAL_STEPS//1_000_000}M steps')
+RESUME_CKPT = '/workspace/G1Walk/checkpoints/best.pt'
 
-env    = VecG1Env(XML_PATH, N_ENVS, PHASE_STAND)
+print(f'G1Walk v2 | PPO + Transformer | {N_ENVS} envs | '
+      f'{TOTAL_STEPS//1_000_000}M steps | resuming from best.pt')
+
+env    = VecG1Env(XML_PATH, N_ENVS, PHASE_FULL)
 policy = TransformerPolicy(OBS_DIM, ACT_DIM, HISTORY_LEN).to(DEVICE)
 obs_rms= RunningMeanStd(shape=(OBS_DIM,))
+
+# load checkpoint
+ckpt = torch.load(RESUME_CKPT, weights_only=False)
+policy.load_state_dict(ckpt['policy'])
+obs_rms.mean = ckpt['obs_rms_mean']
+obs_rms.var  = ckpt['obs_rms_var']
+current_phase = PHASE_FULL
+print(f'Resumed from checkpoint. Phase: {current_phase}')
 ret_rms= RunningMeanStd(shape=(1,))
 
 total_params = sum(p.numel() for p in policy.parameters())
@@ -120,7 +130,7 @@ done_buf = torch.zeros(N_STEPS, N_ENVS).to(DEVICE)
 
 os.makedirs('/workspace/G1Walk/checkpoints', exist_ok=True)
 os.makedirs('/workspace/G1Walk/logs', exist_ok=True)
-log_f = open('/workspace/G1Walk/logs/train.csv', 'w')
+log_f = open('/workspace/G1Walk/logs/train_v2.csv', 'w')
 log_f.write('steps,iteration,phase,mean_reward,vf_loss,entropy,kl\n')
 
 # init
@@ -135,7 +145,7 @@ iteration     = 0
 ep_rewards    = []
 curr_rewards  = np.zeros(N_ENVS)
 best_reward   = -np.inf
-current_phase = PHASE_STAND
+current_phase = PHASE_FULL  # set by checkpoint
 
 def get_history_tensor():
     arr = np.stack([np.stack(list(h)) for h in obs_histories])
@@ -274,7 +284,7 @@ while total_steps < TOTAL_STEPS:
             'timesteps':     total_steps,
             'iteration':     iteration,
         }
-        path = f'/workspace/G1Walk/checkpoints/ckpt_{total_steps//1_000_000}M.pt'
+        path = f'/workspace/G1Walk/checkpoints/v2_ckpt_{total_steps//1_000_000}M.pt'
         torch.save(ckpt, path)
 
     if mean_reward > best_reward and ep_rewards:
@@ -284,7 +294,7 @@ while total_steps < TOTAL_STEPS:
             'obs_rms_mean': obs_rms.mean,
             'obs_rms_var':  obs_rms.var,
             'phase':        current_phase,
-        }, '/workspace/G1Walk/checkpoints/best.pt')
+        }, '/workspace/G1Walk/checkpoints/best_v2.pt')
 
 env.close()
 log_f.close()

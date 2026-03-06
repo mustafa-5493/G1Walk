@@ -181,8 +181,8 @@ class G1Env(gym.Env):
         # 5. jerkiness penalty — high weight (your design)
         jerk_pen = -0.05 * np.sum((action - self.last_action)**2)
 
-        # 6. torso wobble penalty — high weight (your design)
-        wobble_pen = -0.1 * (qvel[3]**2 + qvel[4]**2)
+        # 6. torso wobble penalty — increased to reduce lateral swing (your design)
+        wobble_pen = -0.3 * (qvel[3]**2 + qvel[4]**2)
 
         # 7. arm flailing penalty — medium weight (your design)
         arm_pen = -0.0001 * np.sum(qvel[6+15:]**2)
@@ -198,14 +198,30 @@ class G1Env(gym.Env):
         sep     = np.abs(lf[1] - rf[1])
         sep_rew = 1.0 * np.clip(sep - 0.15, -0.15, 0.2)
 
-        # 10. survival
+        # 10. foot impact penalty — force spike + foot velocity at contact (your design)
+        impact_pen = 0.0
+        for i, (prev, curr) in enumerate(zip(self.prev_foot_contacts, foot_contacts)):
+            if prev == 0.0 and curr == 1.0:  # foot just made contact
+                foot_id = self.left_foot_id if i == 0 else self.right_foot_id
+                foot_vel = self.data.cvel[foot_id][3:6]  # translational velocity
+                impact_pen += -0.1 * abs(foot_vel[2])   # vertical velocity at impact
+        # force spike: penalize sudden large actuator forces
+        force_spike = -0.1 * np.mean(np.clip(np.abs(self.data.actuator_force) - 50, 0, None))
+
+        # 11. elbow resting pose penalty (your design: -0.25 x elbow_angle^2)
+        left_elbow_angle  = qpos[7 + 18]   # left elbow joint
+        right_elbow_angle = qpos[7 + 25]   # right elbow joint
+        elbow_pen = -0.25 * (left_elbow_angle**2 + right_elbow_angle**2)
+
+        # 12. survival
         survival = 0.5
 
         return float(
             vx_rew + vy_rew + yaw_rew +
             upright + alternating + air_time_rew +
             energy_pen + jerk_pen + wobble_pen +
-            arm_pen + slip_pen + sep_rew + survival
+            arm_pen + slip_pen + sep_rew +
+            impact_pen + force_spike + elbow_pen + survival
         )
 
     def _is_terminated(self):
