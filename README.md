@@ -2,9 +2,7 @@
 
 A from-scratch implementation of PPO with a Transformer policy, trained on a custom MuJoCo environment for Unitree G1 humanoid locomotion using a 3-phase curriculum.
 
-## Demo
-
-![G1Walk Demo](g1_demo.mp4)
+https://github.com/user-attachments/assets/5d4e8333-5807-4569-8153-2baec54bad33
 
 *Unitree G1 tracking variable velocity commands after 39M training steps.*
 
@@ -18,10 +16,12 @@ A from-scratch implementation of PPO with a Transformer policy, trained on a cus
 | Training steps | 39M |
 | Training time | ~18 hours on T4 GPU |
 
-## Architecture
+## Training Curve
+<img width="1800" height="750" alt="training_curve" src="https://github.com/user-attachments/assets/f131f4fe-ebe0-40c2-95a7-5f56e1803228" />
 
-**Policy:** Encoder-Decoder Transformer
-- Asymmetric design: encoder 256 dim / 4 layers, decoder 128 dim / 2 layers
+
+**Policy:** Transformer Encoder
+- 256 embed dim, 3 layers, 4 attention heads
 - 8-frame observation history
 - Separate actor and critic heads
 - Orthogonal weight initialization
@@ -46,11 +46,14 @@ A from-scratch implementation of PPO with a Transformer policy, trained on a cus
 | Upright bonus | 3.0 | Quaternion w² × height |
 | Alternating foot contact | 2.0 | Encourage natural gait timing |
 | Foot air time | 0.5 | Reward proper swing phase |
+| Survival | 0.5 | Per-step survival bonus |
 | Energy penalty | -0.0005 | Penalize torque² |
 | Jerkiness penalty | -0.05 | Penalize action delta² |
 | Torso wobble penalty | -0.1 | Penalize angular velocity² |
+| Arm flailing penalty | -0.0001 | Penalize arm joint velocity² |
 | Foot slip penalty | -0.3 | Penalize horizontal velocity during contact |
 | Foot separation reward | 1.0 | Prevent narrow/crossing stance |
+
 
 ## Curriculum (3 phases)
 
@@ -98,7 +101,7 @@ G1Walk/
 ├── env/
 │   └── g1_env.py          # Custom MuJoCo environment
 ├── policy/
-│   └── transformer_policy.py  # Encoder-Decoder Transformer
+│   └── transformer_policy.py  # Encoder Transformer
 ├── scripts/
 │   ├── train.py           # PPO training loop
 │   └── evaluate.py        # Evaluation + video recording
@@ -110,7 +113,7 @@ G1Walk/
 
 Every core component was implemented without RL libraries:
 - PPO algorithm (clipped surrogate, GAE, separate optimizers)
-- Transformer policy (input projection, positional embeddings, encoder-decoder)
+- Transformer policy (input projection, positional embeddings, encoder)
 - Running mean/std normalizer
 - Vectorized environment wrapper
 - Custom G1 MuJoCo environment (observation space, reward, curriculum)
@@ -119,8 +122,8 @@ MuJoCo, PyTorch, and Gymnasium are used as infrastructure tools only.
 
 ## Limitations & Future Work
 
-- Gait smoothness limited by current reward formulation — foot impact penalty is a natural next step
-- No push recovery (phase 3)
+- Gait smoothness limited by current reward formulation. Next step is foot impact penalty.
+- No push recovery yet
 - No rough terrain
 - Sim-to-real transfer not yet attempted
 
