@@ -145,7 +145,6 @@ MuJoCo, PyTorch, and Gymnasium are used as infrastructure tools only.
 - v2 diagonal drift: lateral velocity training range will be constrained in v3
 - No push recovery yet
 - No rough terrain
-- Personal motion imitation (v3): fine-tune on developer's own movement data via MediaPipe pose estimation
 - Sim-to-real transfer not yet attempted
 
 ## References
