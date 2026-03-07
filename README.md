@@ -28,6 +28,12 @@ https://github.com/user-attachments/assets/0e0f3b59-43dd-4990-88b8-b0b7445695ad
 
 *Torso wobble reduced 58% (2.674 → 1.122 angular vel²). Known limitation: diagonal drift from wide lateral velocity training range.*
 
+## Training Curve (v4)
+<img width="1800" height="750" alt="training_curve_v4" src="https://github.com/user-attachments/assets/2db8c3b5-6155-40a4-b75c-912c408ba7d6" />
+
+
+
+
 ## What Changed Each Version
 
 **v1 → v2:** Increased wobble penalty (-0.1 → -0.3), added foot impact penalty, added elbow resting pose penalty. Result: measurably smoother torso.
