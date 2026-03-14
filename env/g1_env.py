@@ -32,7 +32,7 @@ class G1Env(gym.Env):
     """
     Custom Gymnasium environment for Unitree G1 velocity tracking.
 
-    Design decisions by Walter:
+    
     - Position actuators with per-group PD gains (defined in XML)
     - Full observation: body state + joints + last action + cmd + foot contacts
     - Reward: alternating gait + upright + velocity tracking + penalties
