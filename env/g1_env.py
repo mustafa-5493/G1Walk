@@ -16,7 +16,7 @@ from gymnasium import spaces
 OBS_DIM = 4 + 3 + 3 + 29 + 29 + 29 + 3 + 2  # = 102
 ACT_DIM = 29
 
-# Curriculum phases (Walter's design)
+# Curriculum phases 
 PHASE_STAND = 0
 PHASE_SLOW  = 1
 PHASE_FULL  = 2
