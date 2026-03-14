@@ -160,11 +160,11 @@ class G1Env(gym.Env):
         vy_rew  = 0.5 * np.exp(-4.0 * (qvel[1] - vy_cmd)**2)
         yaw_rew = 2.0 * np.exp(-3.0 * (qvel[5] - yaw_cmd)**2)
 
-        # 2. upright — high weight (your design)
+        # 2. upright — high weight 
         w       = qpos[3]
         upright = 3.0 * (w**2) * np.clip(qpos[2] - 0.5, 0.0, 1.0)
 
-        # 3. alternating foot contact — high weight (your design)
+        # 3. alternating foot contact — high weight 
         left, right = foot_contacts
         alternating = 2.0 * float(left != right)
         for i, (prev, curr) in enumerate(
@@ -175,30 +175,30 @@ class G1Env(gym.Env):
                 self.foot_air_time[i] += self.ctrl_dt
         air_time_rew = 0.5 * np.sum(np.clip(self.foot_air_time, 0.0, 0.5))
 
-        # 4. energy penalty — high weight (your design)
+        # 4. energy penalty — high weight 
         energy_pen = -0.0005 * np.sum(self.data.actuator_force**2)
 
-        # 5. jerkiness penalty — high weight (your design)
+        # 5. jerkiness penalty — high weight 
         jerk_pen = -0.05 * np.sum((action - self.last_action)**2)
 
-        # 6. torso wobble penalty — increased to reduce lateral swing (your design)
+        # 6. torso wobble penalty — increased to reduce lateral swing
         wobble_pen = -0.3 * (qvel[3]**2 + qvel[4]**2)
 
-        # 7. arm flailing penalty — medium weight (your design)
+        # 7. arm flailing penalty — medium weight 
         arm_pen = -0.0001 * np.sum(qvel[6+15:]**2)
 
-        # 8. foot slip penalty — high weight (your design)
+        # 8. foot slip penalty — high weight
         slip_pen = 0.0
         if left > 0.5 or right > 0.5:
             slip_pen = -0.3 * np.linalg.norm(qvel[0:2])
 
-        # 9. foot separation reward (your design — prevent narrow stance)
+        # 9. foot separation reward (  prevent narrow stance)
         lf = self.data.xpos[self.left_foot_id]
         rf = self.data.xpos[self.right_foot_id]
         sep     = np.abs(lf[1] - rf[1])
         sep_rew = 1.0 * np.clip(sep - 0.15, -0.15, 0.2)
 
-        # 10. foot impact penalty — force spike + foot velocity at contact (your design)
+        # 10. foot impact penalty — force spike + foot velocity at contact 
         impact_pen = 0.0
         for i, (prev, curr) in enumerate(zip(self.prev_foot_contacts, foot_contacts)):
             if prev == 0.0 and curr == 1.0:  # foot just made contact
@@ -208,7 +208,7 @@ class G1Env(gym.Env):
         # force spike: penalize sudden large actuator forces
         force_spike = -0.1 * np.mean(np.clip(np.abs(self.data.actuator_force) - 50, 0, None))
 
-        # 11. elbow resting pose penalty (your design: -0.25 x elbow_angle^2)
+        # 11. elbow resting pose penalty (-0.25 x elbow_angle^2)
         left_elbow_angle  = qpos[7 + 18]   # left elbow joint
         right_elbow_angle = qpos[7 + 25]   # right elbow joint
         elbow_pen = -0.25 * (left_elbow_angle**2 + right_elbow_angle**2)
@@ -231,20 +231,20 @@ class G1Env(gym.Env):
         # fallen
         if qpos[2] < 0.3:
             return True
-        # too tilted (your design: 45 degrees, cos45=0.707)
+        # too tilted (45 degrees, cos45=0.707)
         if abs(qpos[3]) < 0.7:
             return True
-        # arms pointing up (your design)
+        # arms pointing up
         jp = qpos[7:]
         if jp[15] > 1.5 or jp[22] > 1.5:
             return True
         # forbidden body contact
         if self._check_forbidden_contact():
             return True
-        # velocity too high (your design)
+        # velocity too high
         if np.linalg.norm(qvel[0:3]) > 5.0:
             return True
-        # feet too close (your design)
+        # feet too close 
         lf = self.data.xpos[self.left_foot_id]
         rf = self.data.xpos[self.right_foot_id]
         if np.abs(lf[1] - rf[1]) < 0.05:
