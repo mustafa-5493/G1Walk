@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 from torch.distributions import Normal
 
-# Walter's design: Transformer encoder over 8 frames, 256 hidden, 3 layers
+# Transformer encoder over 8 frames, 256 hidden, 3 layers
 
 class TransformerPolicy(nn.Module):
     """
