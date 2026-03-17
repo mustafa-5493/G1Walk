@@ -8,8 +8,6 @@ from torch.distributions import Normal
 class TransformerPolicy(nn.Module):
     """
     Transformer-based actor-critic for G1 locomotion.
-
-    Design decisions:
     - 8-frame observation history
     - Transformer encoder: 256 embed dim, 4 heads, 3 layers
     - Separate MLP critic (current obs only)
