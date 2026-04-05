@@ -72,27 +72,28 @@ https://github.com/user-attachments/assets/714bff39-4341-4c7a-b372-447189df9109
 - 102-dimensional observation space
 - Hard termination conditions (height, tilt, forbidden contact, velocity)
 
-## Reward Function (v4)
+## Reward Function (v5)
 
 | Component | Weight | Phase | Description |
 |-----------|--------|-------|-------------|
 | Velocity tracking | 1.5 / 0.5 / 2.0 | All | Track vx, vy, yaw commands |
 | Upright bonus | 3.0 | All | Quaternion w² × height |
-| Alternating foot contact | 2.5 | All | Encourage natural gait timing |
+| Alternating foot contact | 2.0 | All | Encourage natural gait timing |
 | Foot air time | 0.5 | All | Reward proper swing phase |
 | Survival | 0.5 | All | Per-step survival bonus |
-| Torso wobble penalty | -0.3 | All | Penalize angular velocity² |
+| Torso wobble penalty | -0.3 | All | Penalize roll/pitch angular velocity² |
+| Torso pitch penalty | -1.0 | All | Penalize forward lean |
 | Jerkiness penalty | -0.05 | All | Penalize action delta² |
 | Foot slip penalty | -0.3 | All | Penalize sliding during contact |
 | Foot separation reward | 1.0 | All | Prevent narrow/crossing stance |
 | Foot impact penalty | -0.1 | All | Penalize foot velocity at contact |
-| Arm swing reward | 0.5 | All | Cross-body anti-phase coordination |
+| Arm swing reward | 2.0 | All | Cross-body torso rotation coordination |
 | Energy penalty | -0.000005 | Phase 2 | Penalize actuator force² |
 | Force spike penalty | -0.01 | Phase 2 | Penalize sudden large forces |
 | Lateral drift penalty | -0.5 | Phase 2 | Penalize y-position deviation |
 | Heading penalty | -1.0 | Phase 2 | Penalize movement direction error |
-
 ## Curriculum (3 phases)
+
 
 | Phase | Command | Advancement |
 |-------|---------|-------------|
