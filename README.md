@@ -49,6 +49,7 @@ https://github.com/user-attachments/assets/714bff39-4341-4c7a-b372-447189df9109
 **v2 → v3:** Fixed elbow joint indices, added cross-body arm-swing reward (anti-phase coordination), tightened velocity range (vy ±0.3 → ±0.1). Result: highest raw score across all runs.
 
 **v3 → v4:** Trained from scratch with hard XML joint limit on hip yaw (±158° → ±10°), locked vy=0 during phases 0 and 1, added lateral drift and heading penalties in phase 2. Result: forward-facing feet (guaranteed by physics, not reward), no diagonal drift.
+
 **v4 → v5:** Increased arm swing reward weight 4× (0.5 → 2.0), added torso pitch penalty (-1.0 × pitch_vel²), phase-gated energy and force spike penalties to phase 2 only. Result: visibly erect posture, natural torso rotation in rhythm with gait, smoother leg movement. Eval reward: 7008 ± 141 — new all-time record.
 
 ## Architecture
