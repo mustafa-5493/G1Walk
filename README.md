@@ -1,4 +1,5 @@
 # G1Walk
+*Z — a Unitree G1 humanoid learning to walk through iterative reinforcement learning.*
 
 A from-scratch implementation of PPO with a Transformer policy, trained on a custom MuJoCo environment for Unitree G1 humanoid locomotion using a 3-phase curriculum.
 
