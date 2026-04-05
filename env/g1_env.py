@@ -154,74 +154,68 @@ class G1Env(gym.Env):
         qpos = self.data.qpos
         qvel = self.data.qvel
         vx_cmd, vy_cmd, yaw_cmd = self.cmd
-
-        # 1. velocity tracking
         vx_rew  = 1.5 * np.exp(-3.0 * (qvel[0] - vx_cmd)**2)
         vy_rew  = 0.5 * np.exp(-4.0 * (qvel[1] - vy_cmd)**2)
         yaw_rew = 2.0 * np.exp(-3.0 * (qvel[5] - yaw_cmd)**2)
-
-        # 2. upright — high weight 
         w       = qpos[3]
         upright = 3.0 * (w**2) * np.clip(qpos[2] - 0.5, 0.0, 1.0)
-
-        # 3. alternating foot contact — high weight 
         left, right = foot_contacts
         alternating = 2.0 * float(left != right)
-        for i, (prev, curr) in enumerate(
-                zip(self.prev_foot_contacts, foot_contacts)):
+        for i, (prev, curr) in enumerate(zip(self.prev_foot_contacts, foot_contacts)):
             if prev == 1.0 and curr == 0.0:
                 self.foot_air_time[i] = 0.0
             elif curr == 0.0:
                 self.foot_air_time[i] += self.ctrl_dt
         air_time_rew = 0.5 * np.sum(np.clip(self.foot_air_time, 0.0, 0.5))
-
-        # 4. energy penalty — high weight 
-        energy_pen = -0.0005 * np.sum(self.data.actuator_force**2)
-
-        # 5. jerkiness penalty — high weight 
+        if self.phase == PHASE_FULL:
+            energy_pen = -0.000005 * np.sum(self.data.actuator_force**2)
+        else:
+            energy_pen = 0.0
         jerk_pen = -0.05 * np.sum((action - self.last_action)**2)
-
-        # 6. torso wobble penalty — increased to reduce lateral swing
         wobble_pen = -0.3 * (qvel[3]**2 + qvel[4]**2)
-
-        # 7. arm flailing penalty — medium weight 
-        arm_pen = -0.0001 * np.sum(qvel[6+15:]**2)
-
-        # 8. foot slip penalty — high weight
+        arm_pen = -0.000001 * np.sum(qvel[6+15:]**2)
         slip_pen = 0.0
         if left > 0.5 or right > 0.5:
             slip_pen = -0.3 * np.linalg.norm(qvel[0:2])
-
-        # 9. foot separation reward (  prevent narrow stance)
         lf = self.data.xpos[self.left_foot_id]
         rf = self.data.xpos[self.right_foot_id]
         sep     = np.abs(lf[1] - rf[1])
         sep_rew = 1.0 * np.clip(sep - 0.15, -0.15, 0.2)
-
-        # 10. foot impact penalty — force spike + foot velocity at contact 
         impact_pen = 0.0
         for i, (prev, curr) in enumerate(zip(self.prev_foot_contacts, foot_contacts)):
-            if prev == 0.0 and curr == 1.0:  # foot just made contact
+            if prev == 0.0 and curr == 1.0:
                 foot_id = self.left_foot_id if i == 0 else self.right_foot_id
-                foot_vel = self.data.cvel[foot_id][3:6]  # translational velocity
-                impact_pen += -0.1 * abs(foot_vel[2])   # vertical velocity at impact
-        # force spike: penalize sudden large actuator forces
-        force_spike = -0.1 * np.mean(np.clip(np.abs(self.data.actuator_force) - 50, 0, None))
-
-        # 11. elbow resting pose penalty (-0.25 x elbow_angle^2)
-        left_elbow_angle  = qpos[7 + 18]   # left elbow joint
-        right_elbow_angle = qpos[7 + 25]   # right elbow joint
-        elbow_pen = -0.25 * (left_elbow_angle**2 + right_elbow_angle**2)
-
-        # 12. survival
+                foot_vel = self.data.cvel[foot_id][3:6]
+                impact_pen += -0.1 * abs(foot_vel[2])
+        if self.phase == PHASE_FULL:
+            force_spike = -0.01 * np.mean(np.clip(np.abs(self.data.actuator_force) - 50, 0, None))
+        else:
+            force_spike = 0.0
+        left_hip_vel       = qvel[6]
+        left_shoulder_vel  = qvel[6 + 14]
+        right_hip_vel      = qvel[6 + 6]
+        right_shoulder_vel = qvel[6 + 19]
+        arm_swing_rew = 2.0 * (-left_hip_vel * right_shoulder_vel + -right_hip_vel * left_shoulder_vel)
+        arm_swing_rew = np.clip(arm_swing_rew, -2.0, 2.0)
+        torso_pitch_pen = -1.0 * qvel[4]**2
+        if self.phase == PHASE_FULL:
+            lateral_drift_pen = -0.5 * qpos[1]**2
+        else:
+            lateral_drift_pen = 0.0
+        if self.phase == PHASE_FULL and np.linalg.norm(qvel[0:2]) > 0.1:
+            actual_heading = np.arctan2(qvel[1], qvel[0])
+            heading_pen = -1.0 * actual_heading**2
+        else:
+            heading_pen = 0.0
         survival = 0.5
-
         return float(
             vx_rew + vy_rew + yaw_rew +
             upright + alternating + air_time_rew +
             energy_pen + jerk_pen + wobble_pen +
             arm_pen + slip_pen + sep_rew +
-            impact_pen + force_spike + elbow_pen + survival
+            impact_pen + force_spike +
+            arm_swing_rew + torso_pitch_pen +
+            lateral_drift_pen + heading_pen + survival
         )
 
     def _is_terminated(self):
