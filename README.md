@@ -2,14 +2,15 @@
 
 A from-scratch implementation of PPO with a Transformer policy, trained on a custom MuJoCo environment for Unitree G1 humanoid locomotion using a 3-phase curriculum.
 
-## Demo — v4 (Latest)
+##  Demo — v5 (Latest)
+
+https://github.com/user-attachments/assets/41224286-6865-4f06-b1d3-dc732810b550
 
 
-https://github.com/user-attachments/assets/714bff39-4341-4c7a-b372-447189df9109
 
-Straight forward walking with forward-facing feet. No diagonal drift.
 
-## Version History
+
+Erect posture, smooth leg movement, natural torso rotation in rhythm with gait cycle. No diagonal drift.
 
 | Version | Mean Eval Reward | Steps | Key Changes |
 |---------|-----------------|-------|-------------|
@@ -17,6 +18,7 @@ Straight forward walking with forward-facing feet. No diagonal drift.
 | v2 | 4274 ± 478 | 30M from v1 | Foot impact penalty, torso wobble -58% |
 | v3 | 5463 ± 13 | 11M from v2 | Arm swing reward, tighter velocity range, correct elbow penalty |
 | v4 | 4167 ± 487 | 13M from scratch | Hard hip yaw constraint (±10°), vy=0 in phases 0-1, heading + drift penalties |
+| v5 | **7008 ± 141** | 30M from scratch | Arm swing ×4, torso pitch penalty, phase-gated energy penalties |
 
 ### v1 — Baseline
 
@@ -27,6 +29,12 @@ https://github.com/user-attachments/assets/5d4e8333-5807-4569-8153-2baec54bad33
 https://github.com/user-attachments/assets/0e0f3b59-43dd-4990-88b8-b0b7445695ad
 
 *Torso wobble reduced 58% (2.674 → 1.122 angular vel²). Known limitation: diagonal drift from wide lateral velocity training range.*
+
+### v4 — Straight feet, no diagonal drift
+
+https://github.com/user-attachments/assets/714bff39-4341-4c7a-b372-447189df9109
+
+
 
 ## Training Curve (v4)
 <img width="1800" height="750" alt="training_curve_v4" src="https://github.com/user-attachments/assets/2db8c3b5-6155-40a4-b75c-912c408ba7d6" />
@@ -41,6 +49,7 @@ https://github.com/user-attachments/assets/0e0f3b59-43dd-4990-88b8-b0b7445695ad
 **v2 → v3:** Fixed elbow joint indices, added cross-body arm-swing reward (anti-phase coordination), tightened velocity range (vy ±0.3 → ±0.1). Result: highest raw score across all runs.
 
 **v3 → v4:** Trained from scratch with hard XML joint limit on hip yaw (±158° → ±10°), locked vy=0 during phases 0 and 1, added lateral drift and heading penalties in phase 2. Result: forward-facing feet (guaranteed by physics, not reward), no diagonal drift.
+**v4 → v5:** Increased arm swing reward weight 4× (0.5 → 2.0), added torso pitch penalty (-1.0 × pitch_vel²), phase-gated energy and force spike penalties to phase 2 only. Result: visibly erect posture, natural torso rotation in rhythm with gait, smoother leg movement. Eval reward: 7008 ± 141 — new all-time record.
 
 ## Architecture
 
@@ -145,8 +154,8 @@ MuJoCo, PyTorch, and Gymnasium are used as infrastructure only.
 
 ## Limitations & Future Work
 
-- Arm swing reward not yet producing visible anti-phase coordination
-- No push recovery
+- Torso yaw sway slightly aggressive — to be dampened in v6
+- No push recovery yet
 - No rough terrain
 - Sim-to-real transfer not yet attempted
 
