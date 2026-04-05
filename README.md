@@ -2,41 +2,45 @@
 
 A from-scratch implementation of PPO with a Transformer policy, trained on a custom MuJoCo environment for Unitree G1 humanoid locomotion using a 3-phase curriculum.
 
-## Versions
+## Demo — v4 (Latest)
 
-| Version | Torso Wobble (angular vel²) | Elbow Angle | Notes |
-|---------|----------------------------|-------------|-------|
-| v1 | 2.674 | 0.156 | Baseline — 39M steps |
-| v2 | 1.122 (-58%) | 0.163 | Foot impact penalty, elbow penalty, increased wobble penalty — 30M steps from v1 checkpoint |
 
-## Demo
+https://github.com/user-attachments/assets/714bff39-4341-4c7a-b372-447189df9109
 
-**v1 — Baseline**
+Straight forward walking with forward-facing feet. No diagonal drift.
+
+## Version History
+
+| Version | Mean Eval Reward | Steps | Key Changes |
+|---------|-----------------|-------|-------------|
+| v1 | 4827 ± 266 | 39M | Baseline — PPO + Transformer from scratch |
+| v2 | 4274 ± 478 | 30M from v1 | Foot impact penalty, torso wobble -58% |
+| v3 | 5463 ± 13 | 11M from v2 | Arm swing reward, tighter velocity range, correct elbow penalty |
+| v4 | 4167 ± 487 | 13M from scratch | Hard hip yaw constraint (±10°), vy=0 in phases 0-1, heading + drift penalties |
+
+### v1 — Baseline
 
 https://github.com/user-attachments/assets/5d4e8333-5807-4569-8153-2baec54bad33
 
-**v2 — Reduced torso wobble, emergent arm-leg coordination**
-
-
+### v2 — Reduced torso wobble
 
 https://github.com/user-attachments/assets/0e0f3b59-43dd-4990-88b8-b0b7445695ad
 
+*Torso wobble reduced 58% (2.674 → 1.122 angular vel²). Known limitation: diagonal drift from wide lateral velocity training range.*
+
+## Training Curve (v4)
+<img width="1800" height="750" alt="training_curve_v4" src="https://github.com/user-attachments/assets/2db8c3b5-6155-40a4-b75c-912c408ba7d6" />
 
 
-*Known limitation in v2: diagonal drift artifact from wide lateral velocity training range. To be fixed in v3.*
 
-## Results
 
-| Metric | Value |
-|--------|-------|
-| Mean evaluation reward | 4827 ± 266 |
-| Best episode reward | 5428 |
-| Episode length | 1000 steps (never falls) |
-| Training steps | 39M (v1) + 30M (v2) |
-| Training time | ~18 hours on T4 GPU |
+## What Changed Each Version
 
-## Training Curve
-<img width="1800" height="750" alt="training_curve" src="https://github.com/user-attachments/assets/f131f4fe-ebe0-40c2-95a7-5f56e1803228" />
+**v1 → v2:** Increased wobble penalty (-0.1 → -0.3), added foot impact penalty, added elbow resting pose penalty. Result: measurably smoother torso.
+
+**v2 → v3:** Fixed elbow joint indices, added cross-body arm-swing reward (anti-phase coordination), tightened velocity range (vy ±0.3 → ±0.1). Result: highest raw score across all runs.
+
+**v3 → v4:** Trained from scratch with hard XML joint limit on hip yaw (±158° → ±10°), locked vy=0 during phases 0 and 1, added lateral drift and heading penalties in phase 2. Result: forward-facing feet (guaranteed by physics, not reward), no diagonal drift.
 
 ## Architecture
 
@@ -45,47 +49,48 @@ https://github.com/user-attachments/assets/0e0f3b59-43dd-4990-88b8-b0b7445695ad
 - 8-frame observation history
 - Separate actor and critic heads
 - Orthogonal weight initialization
+- 2.3M parameters
 
 **Algorithm:** PPO (implemented from scratch in PyTorch)
 - Generalized Advantage Estimation (GAE)
-- Separate actor/critic optimizers
-- Running mean/std observation and reward normalization
-- Linear learning rate decay
+- Separate actor/critic learning rates (1e-4 actor, 1e-3 critic)
+- Running mean/std observation normalization
+- Linear learning rate decay over 100M steps
 
 **Environment:** Custom MuJoCo environment for Unitree G1 (23 DOF)
-- Position actuators with per-group PD gains (legs, ankles, waist, arms)
-- 102-dimensional observation space: torso state + joint positions/velocities + last action + velocity command + foot contacts
-- Hard termination conditions
+- Position actuators with per-group PD gains
+- 102-dimensional observation space
+- Hard termination conditions (height, tilt, forbidden contact, velocity)
 
-## Reward Function
+## Reward Function (v4)
 
-| Component | Weight | Description |
-|-----------|--------|-------------|
-| Velocity tracking | 1.5 / 0.5 / 2.0 | Track vx, vy, yaw commands (exponential kernel) |
-| Upright bonus | 3.0 | Quaternion w² × height |
-| Alternating foot contact | 2.0 | Encourage natural gait timing |
-| Foot air time | 0.5 | Reward proper swing phase |
-| Survival | 0.5 | Per-step survival bonus |
-| Energy penalty | -0.0005 | Penalize torque² |
-| Jerkiness penalty | -0.05 | Penalize action delta² |
-| Torso wobble penalty | -0.1 → -0.3 (v2) | Penalize angular velocity² |
-| Arm flailing penalty | -0.0001 | Penalize arm joint velocity² |
-| Foot slip penalty | -0.3 | Penalize horizontal velocity during contact |
-| Foot separation reward | 1.0 | Prevent narrow/crossing stance |
-| Foot impact penalty | -0.1 (v2) | Penalize foot velocity at contact + force spikes |
-| Elbow resting pose penalty | -0.25 (v2) | Penalize elbow deviation from neutral |
+| Component | Weight | Phase | Description |
+|-----------|--------|-------|-------------|
+| Velocity tracking | 1.5 / 0.5 / 2.0 | All | Track vx, vy, yaw commands |
+| Upright bonus | 3.0 | All | Quaternion w² × height |
+| Alternating foot contact | 2.5 | All | Encourage natural gait timing |
+| Foot air time | 0.5 | All | Reward proper swing phase |
+| Survival | 0.5 | All | Per-step survival bonus |
+| Torso wobble penalty | -0.3 | All | Penalize angular velocity² |
+| Jerkiness penalty | -0.05 | All | Penalize action delta² |
+| Foot slip penalty | -0.3 | All | Penalize sliding during contact |
+| Foot separation reward | 1.0 | All | Prevent narrow/crossing stance |
+| Foot impact penalty | -0.1 | All | Penalize foot velocity at contact |
+| Arm swing reward | 0.5 | All | Cross-body anti-phase coordination |
+| Energy penalty | -0.000005 | Phase 2 | Penalize actuator force² |
+| Force spike penalty | -0.01 | Phase 2 | Penalize sudden large forces |
+| Lateral drift penalty | -0.5 | Phase 2 | Penalize y-position deviation |
+| Heading penalty | -1.0 | Phase 2 | Penalize movement direction error |
 
 ## Curriculum (3 phases)
 
-| Phase | Command | Advancement threshold |
-|-------|---------|----------------------|
-| 0 — Stand | vx=0 | Mean reward > 400 |
-| 1 — Slow walk | vx=0.5 m/s | Mean reward > 600 |
-| 2 — Variable velocity | vx∈[0.3, 1.5], vy∈[-0.3, 0.3], yaw∈[-0.5, 0.5] | Final phase |
+| Phase | Command | Advancement |
+|-------|---------|-------------|
+| 0 — Stand | vx=0, vy=0, yaw=0 | Mean reward > 400 |
+| 1 — Slow walk | vx∈[0.3, 0.8], vy=0, yaw=0 | Mean reward > 600 |
+| 2 — Variable velocity | vx∈[0.5, 1.2], vy∈[-0.15, 0.15], yaw∈[-0.3, 0.3] | Final phase |
 
-Phase advancement occurred at:
-- Phase 0 → 1: 5.9M steps
-- Phase 1 → 2: 6.4M steps
+Phases 0 and 1 lock vy=0 to establish a strong forward-walking prior before introducing lateral commands.
 
 ## Observation Space (102 dims)
 
@@ -101,21 +106,19 @@ Phase advancement occurred at:
 | Foot contacts (left, right) | 2 |
 
 ## Setup
+
 ```bash
-# Requirements
 pip install mujoco gymnasium torch numpy imageio
 
-# Clone Unitree MuJoCo models
 git clone https://github.com/unitreerobotics/unitree_mujoco
 
-# Train
 python scripts/train.py
 
-# Evaluate
 MUJOCO_GL=egl python scripts/evaluate.py
 ```
 
 ## Project Structure
+
 ```
 G1Walk/
 ├── env/
@@ -132,18 +135,18 @@ G1Walk/
 ## What's From Scratch
 
 Every core component was implemented without RL libraries:
-- PPO algorithm (clipped surrogate, GAE, separate optimizers)
-- Transformer policy (input projection, positional embeddings, encoder)
-- Running mean/std normalizer
-- Vectorized environment wrapper
-- Custom G1 MuJoCo environment (observation space, reward, curriculum)
+- PPO algorithm (clipped surrogate objective, GAE, entropy regularization)
+- Transformer policy (input projection, positional embeddings, encoder, actor/critic heads)
+- Running mean/std normalizer for observations and returns
+- Vectorized environment wrapper (32 parallel envs)
+- Custom G1 MuJoCo environment (observation space, reward function, curriculum)
 
-MuJoCo, PyTorch, and Gymnasium are used as infrastructure tools only.
+MuJoCo, PyTorch, and Gymnasium are used as infrastructure only.
 
 ## Limitations & Future Work
 
-- v2 diagonal drift: lateral velocity training range will be constrained in v3
-- No push recovery yet
+- Arm swing reward not yet producing visible anti-phase coordination
+- No push recovery
 - No rough terrain
 - Sim-to-real transfer not yet attempted
 

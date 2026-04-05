@@ -3,13 +3,11 @@ import torch.nn as nn
 import numpy as np
 from torch.distributions import Normal
 
-# Walter's design: Transformer encoder over 8 frames, 256 hidden, 3 layers
+# Transformer encoder over 8 frames, 256 hidden, 3 layers
 
 class TransformerPolicy(nn.Module):
     """
     Transformer-based actor-critic for G1 locomotion.
-
-    Design decisions:
     - 8-frame observation history
     - Transformer encoder: 256 embed dim, 4 heads, 3 layers
     - Separate MLP critic (current obs only)
